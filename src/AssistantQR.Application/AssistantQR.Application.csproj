@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    COUCHE APPLICATION.
+    Une seule dépendance autorisée : le Domain.
+    Aucun paquet NuGet : pas de client HTTP, pas de JSON, pas de DI.
+    Tout ce qui vient du monde extérieur passe par un port declare dans Ports/.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\AssistantQR.Domain\AssistantQR.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

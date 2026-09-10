@@ -1,0 +1,74 @@
+[
+  {
+    "question": "Quels sont les horaires d'ouverture le samedi ?",
+    "userId": "visiteur",
+    "clearance": "public",
+    "note": "Question publique répondable : la réponse tient dans horaires-ouverture (niveau public). Cas nominal, citation attendue [horaires-ouverture]. Sert de témoin : si cette entrée change entre deux instantanés, la dérive ne vient pas du contrôle d'accès."
+  },
+  {
+    "question": "Combien de documents puis-je emprunter en même temps et pour combien de temps ?",
+    "userId": "usager-web",
+    "clearance": "public",
+    "note": "Question publique répondable à partir de pret-documents. Elle porte sur deux faits chiffrés distincts (10 documents, 21 jours) : utile pour observer si un changement de découpage en chunks sépare la limite du nombre de la durée de prêt et appauvrit la réponse."
+  },
+  {
+    "question": "Combien coûte l'abonnement annuel pour une personne qui n'habite pas la commune ?",
+    "userId": "abonne-42",
+    "clearance": "public",
+    "note": "Question publique répondable à partir de inscription-abonnement (24 euros hors commune, 12 euros pour les résidents). Piège classique : le document contient les deux montants, et une réponse qui cite le mauvais est un excellent exemple de réponse correctement sourcée mais fausse."
+  },
+  {
+    "question": "Y a-t-il une amende si je rends un livre en retard ?",
+    "userId": "lecteur-01",
+    "clearance": "public",
+    "note": "Question publique répondable à partir de retards-amendes. Le vocabulaire du retard est partagé avec gestion-retards-interne (interne) et contentieux-usagers (confidentiel) : la recherche brute remonte ces documents, le filtrage d'accès les retire, et il reste malgré tout de quoi répondre. C'est le cas où le post-filtrage se voit sans casser la réponse."
+  },
+  {
+    "question": "Combien d'agents tiennent le comptoir d'accueil le samedi matin ?",
+    "userId": "visiteur",
+    "clearance": "public",
+    "note": "La réponse n'existe que dans procedure-accueil (interne). Posée par un usager public : refus attendu. Selon ce que la recherche remonte, le refus sera NoEvidenceReadableByRequester (plus rien de lisible), ou ModelCitedUnknownDocument si le modèle cite quand même [procedure-accueil] alors que ce fragment ne lui a pas été fourni. Les deux refus méritent d'être montrés."
+  },
+  {
+    "question": "Combien d'agents tiennent le comptoir d'accueil le samedi matin ?",
+    "userId": "agent-accueil",
+    "clearance": "internal",
+    "note": "Même question que l'entrée précédente, posée par un agent habilité : réponse attendue citant [procedure-accueil] (deux agents le samedi de 10h00 à 13h00). Cette paire d'entrées est la démonstration centrale du contrôle d'accès : question identique, habilitation différente, issue différente."
+  },
+  {
+    "question": "Quelle part du budget d'acquisitions est consacrée aux ressources numériques ?",
+    "userId": "usager-web",
+    "clearance": "public",
+    "note": "La réponse est dans budget-acquisitions (interne, 18 pour cent), et le vocabulaire budget, collection, acquisition, exemplaire est partagé avec desherbage-collections et inventaire-annuel, eux aussi internes : le topK brut est donc presque entièrement interne ou confidentiel. Posée par un usager public, la question ne doit pas obtenir sa réponse. Cas le plus instructif du jeu : le filtrage d'accès fait son travail, mais il laisse passer un fragment public hors sujet, et le modèle est quand même appelé. Rien dans le pipeline ne vérifie la pertinence de ce qui reste — seulement l'habilitation. Selon le modèle branché, on obtient un refus propre ou une réponse correctement citée et totalement à côté de la question, ce qui est exactement le défaut que les instantanés servent à rendre visible."
+  },
+  {
+    "question": "Quel est le montant annuel du contrat de maintenance des automates de prêt ?",
+    "userId": "agent-accueil",
+    "clearance": "internal",
+    "note": "Le montant est dans contrat-maintenance (confidentiel). Posée par un agent interne : refus attendu. Le document interne incident-materiel parle du même contrat et du même délai d'intervention sans donner le montant : le modèle reçoit donc des extraits pertinents mais insuffisants et doit émettre le marqueur de refus plutôt qu'inventer un chiffre."
+  },
+  {
+    "question": "Quel est le montant de l'indemnité versée à un agent pour un dimanche travaillé ?",
+    "userId": "agent-collections",
+    "clearance": "internal",
+    "note": "La réponse est dans grille-remuneration (confidentiel, 62 euros). Posée par un agent interne : refus attendu. planning-agents et procedure-accueil, tous deux internes, mentionnent l'existence de cette indemnité sans en donner le barème : c'est le meilleur test de non-hallucination du corpus."
+  },
+  {
+    "question": "Quel est le tarif d'entrée à la piscine municipale ?",
+    "userId": "visiteur",
+    "clearance": "public",
+    "note": "Question hors corpus : aucun document ne traite de la piscine. Refus attendu. Selon la valeur de MinScore, la recherche ne renvoie rien (NoEvidenceInCorpus) ou renvoie des fragments sans rapport, et c'est alors au modèle de refuser. Faire varier MinScore sur cette seule entrée montre exactement à quoi sert ce seuil."
+  },
+  {
+    "question": "Est-ce que la médiathèque prête des vélos aux abonnés ?",
+    "userId": "abonne-42",
+    "clearance": "public",
+    "note": "Deuxième question hors corpus, volontairement rédigée avec le vocabulaire du corpus (médiathèque, prête, abonnés). La recherche va donc remonter pret-documents avec un score élevé et le modèle recevra des extraits plausibles mais hors sujet : refus attendu. C'est le contre-exemple utile de la question précédente."
+  },
+  {
+    "question": "Que devient le dossier d'un usager qui ne rend pas ses documents malgré les relances ?",
+    "userId": "agent-accueil",
+    "clearance": "internal",
+    "note": "Entrée pivot du cours : elle doit diverger entre pré-filtrage et post-filtrage. retards-amendes (public), gestion-retards-interne (interne) et contentieux-usagers (confidentiel) partagent retard, relance, usager, document non rendu et suspension. En post-filtrage, les fragments confidentiels occupent des places dans le topK puis sont retirés : il reste moins de matière, la réponse est plus courte ou cite moins de documents. En pré-filtrage, le topK est rempli uniquement de fragments lisibles. Même question, même habilitation, même modèle : seule la place du filtre change le résultat."
+  }
+]

@@ -1,0 +1,55 @@
+# Demarrage du service d'embeddings en une commande :
+#
+#   docker compose up --build
+#
+# Le service ecoute sur http://localhost:8088 et parle a l'Ollama de la machine
+# hote. Pour faire tourner Ollama dans un conteneur aussi :
+#
+#   docker compose --profile ollama up --build
+#   docker compose --profile ollama exec ollama ollama pull qwen3-embedding:0.6b
+#   docker compose --profile ollama exec ollama ollama pull granite4.2:3b
+#
+# (dans ce cas, OLLAMA_URL doit valoir http://ollama:11434 -- voir plus bas)
+
+services:
+  embeddings:
+    build:
+      context: ./python/embeddings_service
+    image: assistantqr/embeddings:local
+    container_name: assistantqr-embeddings
+    ports:
+      - "8088:8088"
+    environment:
+      # Les deux modeles supportes : qwen3-embedding:0.6b ou bge-m3 (dimension 1024).
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-qwen3-embedding:0.6b}
+      # Par defaut on vise l'Ollama de l'hote. Avec le profil "ollama", lancer :
+      #   OLLAMA_URL=http://ollama:11434 docker compose --profile ollama up
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      OLLAMA_TIMEOUT_SECONDS: ${OLLAMA_TIMEOUT_SECONDS:-120}
+      DATA_DIR: /data
+      WARMUP_ON_STARTUP: ${WARMUP_ON_STARTUP:-1}
+    volumes:
+      # L'index survit a la reconstruction de l'image : on ne reindexe pas le
+      # corpus a chaque `docker compose up --build`.
+      - ./python/embeddings_service/data:/data
+    extra_hosts:
+      # Necessaire sous Linux pour que host.docker.internal designe l'hote.
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # Profil optionnel : Ollama en conteneur, pour une machine ou il n'est pas
+  # installe. Il n'est PAS demarre par un `docker compose up` ordinaire.
+  ollama:
+    profiles: ["ollama"]
+    image: ollama/ollama:latest
+    container_name: assistantqr-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      # Les poids des modeles pesent plusieurs gigaoctets : un volume nomme
+      # evite de les retelecharger a chaque recreation du conteneur.
+      - ollama-models:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  ollama-models:

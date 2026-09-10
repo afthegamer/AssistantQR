@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    COUCHE DOMAIN.
+    Contrainte architecturale la plus forte du dépôt : ce fichier ne contient
+    NI <ProjectReference> NI <PackageReference>. Aucune. Jamais.
+    Si tu ajoutes une ligne ici, tu casses la démonstration du cours.
+    Un test (ArchitectureTests) échoue automatiquement si cette règle est violée.
+  -->
+
+</Project>

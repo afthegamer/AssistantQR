@@ -1,0 +1,68 @@
+# ---------------------------------------------------------------------------
+# .NET
+# ---------------------------------------------------------------------------
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userprefs
+.vs/
+.vscode/
+.idea/
+*.received.*
+TestResults/
+[Cc]overage*/
+*.coverage
+*.coveragexml
+*.trx
+artifacts/
+msbuild.log
+msbuild.binlog
+*.binlog
+
+# ---------------------------------------------------------------------------
+# Python — service d'embeddings
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Environnement local : .env.example est versionne, .env ne l'est pas.
+.env
+
+# L'index vectoriel est un artefact reconstructible, pas une source.
+# Il pese vite plusieurs dizaines de megaoctets et change a chaque reindexation.
+python/embeddings_service/data/
+!python/embeddings_service/data/.gitkeep
+
+# ---------------------------------------------------------------------------
+# Instantanes d'evaluation
+#
+# Les instantanes sont des MESURES : ils datent de la machine qui les a prises et
+# n'ont de sens que compares entre eux, dans une meme seance. Les versionner
+# ferait grossir l'historique sans rien apprendre a personne.
+#
+# Deux fichiers echappent a la regle parce qu'ils ne sont pas des mesures mais
+# des ENTREES du systeme, et que le depot doit fonctionner sans eux :
+#   - questions.json    : le jeu de questions d'evaluation ;
+#   - replay-llm.json   : les reponses rejouees par ReplayLanguageModel.
+# ---------------------------------------------------------------------------
+snapshots/*.json
+!snapshots/questions.json
+!snapshots/replay-llm.json
+
+# ---------------------------------------------------------------------------
+# Systeme
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+*.swp

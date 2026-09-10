@@ -1,0 +1,34 @@
+[
+  {
+    "match": "piscine municipale",
+    "response": "AUCUNE_REPONSE"
+  },
+  {
+    "match": "des vélos aux abonnés",
+    "response": "AUCUNE_REPONSE"
+  },
+  {
+    "match": "indemnité versée à un agent pour un dimanche",
+    "response": "AUCUNE_REPONSE"
+  },
+  {
+    "match": "montant annuel du contrat de maintenance",
+    "response": "AUCUNE_REPONSE"
+  },
+  {
+    "match": "comptoir d'accueil le samedi matin",
+    "response": "Deux agents tiennent le comptoir aux heures de forte affluence, dont le samedi de 10h00 à 13h00 ; le reste du temps un seul agent est en poste, avec un renfort joignable par le téléphone interne. Aucun agent ne reste plus de deux heures consécutives au comptoir [procedure-accueil]."
+  },
+  {
+    "match": "ne rend pas ses documents malgré les relances",
+    "response": "Les relances sont envoyées à trois jours, quinze jours puis trente jours de retard, et le droit de prêt est suspendu à partir du vingt et unième jour jusqu'à restitution [retards-amendes]. Chaque lundi, la responsable du service des publics édite la liste des documents non rendus depuis plus de 45 jours et les usagers concernés sont appelés ; au-delà de 90 jours, le dossier part à la régie municipale, qui émet un titre de recettes égal à la valeur de remplacement majorée de 6 euros de frais [gestion-retards-interne]."
+  },
+  {
+    "match": "amende si je rends un livre en retard",
+    "response": "Non : aucune pénalité financière de retard n'est appliquée depuis le 1er janvier 2023. Un retard déclenche une relance par courriel au bout de trois jours, puis la suspension du droit de prêt à partir du vingt et unième jour, levée automatiquement dès que les documents sont rendus. Seul un document non rendu au bout de 90 jours est facturé à sa valeur de remplacement, majorée de 6 euros de frais de dossier [retards-amendes]."
+  },
+  {
+    "match": "horaires d'ouverture le samedi",
+    "response": "La médiathèque des Tilleuls est ouverte le samedi de 10h00 à 18h00 en journée continue. Elle est fermée le lundi et ouvre le mercredi jusqu'à 19h00 [horaires-ouverture]."
+  }
+]

@@ -1,0 +1,4 @@
+# Outillage de test. Separe de requirements.txt pour que l'image Docker
+# n'embarque pas le harnais de test.
+-r requirements.txt
+pytest==8.3.4

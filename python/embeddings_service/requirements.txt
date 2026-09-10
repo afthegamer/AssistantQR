@@ -1,0 +1,8 @@
+# Dependances d'execution du service d'embeddings.
+# Versions epinglees : un service dont les dependances flottent produit des
+# vecteurs differents d'une machine a l'autre sans qu'aucun fichier n'ait change.
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+httpx==0.28.1
+pydantic==2.10.4
+numpy==2.2.1

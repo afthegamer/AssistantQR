@@ -1,0 +1,14 @@
+# Environnement virtuel local (cree par scripts/start-embeddings.*)
+.venv/
+
+# Artefacts Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Configuration locale : .env.example est versionne, .env ne l'est pas.
+.env
+
+# L'index est un artefact reconstructible, pas une source.
+data/*
+!data/.gitkeep
