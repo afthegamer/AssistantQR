@@ -22,7 +22,16 @@ namespace AssistantQR.Infrastructure.Tests.Corpus;
 public sealed class FileSystemDocumentRepositoryTests
 {
     /// <summary>Nombre de documents impose par le contrat du depot.</summary>
-    private const int ExpectedCorpusSize = 23;
+    /// <remarks>
+    /// CE CHIFFRE EST CENSE CASSER. Toute evolution du corpus — un document ajoute pour
+    /// creer une contradiction de version, un document retire — fait echouer ce test, et
+    /// c'est exactement ce qu'on lui demande. Le corpus est une DONNEE du systeme, au meme
+    /// titre qu'un schema de base : on ne le modifie pas sans que quelqu'un le constate.
+    /// Un echec ici n'est donc pas une regression a corriger dans le code, c'est une
+    /// question a trancher — le changement de corpus etait-il voulu ? Si oui, on met la
+    /// constante a jour dans le meme commit que les fichiers ajoutes.
+    /// </remarks>
+    private const int ExpectedCorpusSize = 27;
 
     [Fact]
     public async Task GetAllAsync_CorpusTemporaire_LitTousLesDocumentsAvecLeursNiveaux()
@@ -144,7 +153,7 @@ public sealed class FileSystemDocumentRepositoryTests
     // ------------------------------------------------------------------------
 
     [Fact]
-    public async Task GetAllAsync_CorpusDuDepot_ContientLesVingtTroisDocumentsImposes()
+    public async Task GetAllAsync_CorpusDuDepot_ContientLesDocumentsImposes()
     {
         var repository = new FileSystemDocumentRepository(RepositoryLayout.CorpusDirectory);
 

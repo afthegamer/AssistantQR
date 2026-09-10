@@ -1,0 +1,38 @@
+[
+  {
+    "question": "Combien coûte l'abonnement annuel pour une personne qui n'habite pas la commune ?",
+    "userId": "abonne-42",
+    "clearance": "public",
+    "note": "Fait contesté : le tarif hors commune. inscription-abonnement (public, sans date) dit 24 euros ; tarifs-2026 (public, délibération du 9 décembre 2025, applicable au 1er janvier 2026) dit 28 euros. Réponse CORRECTE si tarifs-2026 l'emporte : 28 euros. Réponse FAUSSE si inscription-abonnement l'emporte : 24 euros. Les deux documents sont publics et lisibles par ce demandeur : l'issue ne dépend donc que de la récupération, pas du contrôle d'accès. Piège supplémentaire : les deux documents contiennent aussi le tarif commune (12 euros contre 15 euros), une réponse peut donc être fausse deux fois."
+  },
+  {
+    "question": "Combien coûte le remplacement d'une carte perdue ?",
+    "userId": "usager-web",
+    "clearance": "public",
+    "note": "Fait contesté : les frais de remplacement de carte. inscription-abonnement (public) dit 3 euros ; tarifs-2026 (public) dit 5 euros. Réponse CORRECTE si tarifs-2026 l'emporte : 5 euros. Réponse FAUSSE si inscription-abonnement l'emporte : 3 euros. Le montant est un détail de fin de document dans les deux cas : entrée utile pour observer si le découpage en paragraphes remonte le bon morceau, alors que la question de tarif précédente est servie par le premier paragraphe du corps."
+  },
+  {
+    "question": "Combien de documents puis-je emprunter en même temps et pour combien de temps ?",
+    "userId": "usager-web",
+    "clearance": "public",
+    "note": "Deux faits contestés d'un coup. pret-documents (public, sans date) dit 10 documents et 21 jours pour un livre ; conditions-pret (public, version 4 du 3 juillet 2025, applicable au 1er septembre 2025) dit 12 documents et 28 jours. Réponse CORRECTE si conditions-pret l'emporte : 12 documents, 28 jours. Réponse FAUSSE si pret-documents l'emporte : 10 documents, 21 jours. Une réponse qui mélange les deux sources — 12 documents pendant 21 jours, ou l'inverse — est également fausse et doit être comptée comme telle : c'est le cas le plus instructif du jeu, deux fragments également plausibles et mutuellement incompatibles dans le même contexte."
+  },
+  {
+    "question": "Quels sont les frais si un document n'est jamais rendu ?",
+    "userId": "lecteur-01",
+    "clearance": "public",
+    "note": "Fait contesté : les frais de dossier et le délai de perte. retards-amendes (public, sans date) dit 6 euros de frais de dossier après 90 jours ; relances-retards (public, délibération du 18 novembre 2025, applicable au 1er janvier 2026) dit 12 euros après 75 jours. Réponse CORRECTE si relances-retards l'emporte : 12 euros, 75 jours. Réponse FAUSSE si retards-amendes l'emporte : 6 euros, 90 jours. Particularité de cette entrée : gestion-retards-interne (interne) répète la valeur ancienne, 6 euros et 90 jours. Un agent interne reçoit donc deux documents concordants contre un seul document à jour, et la majorité arithmétique désigne la mauvaise réponse. À poser aussi avec une habilitation interne pour comparer."
+  },
+  {
+    "question": "À partir de combien de jours de retard le droit de prêt est-il suspendu ?",
+    "userId": "visiteur",
+    "clearance": "public",
+    "note": "Fait contesté : le seuil de suspension. retards-amendes (public) dit à partir du vingt et unième jour ; relances-retards (public) dit à partir du quinzième jour. Réponse CORRECTE si relances-retards l'emporte : 15 jours. Réponse FAUSSE si retards-amendes l'emporte : 21 jours. Difficulté propre à cette entrée : le quinzième jour figure aussi dans les deux documents comme date de deuxième relance, événement différent. Une réponse qui dit 15 en citant le calendrier des relances plutôt que la suspension donne le bon chiffre pour la mauvaise raison et ne doit pas être comptée juste sans vérification de l'extrait cité."
+  },
+  {
+    "question": "Quelle part du budget d'acquisitions est consacrée aux ressources numériques ?",
+    "userId": "agent-collections",
+    "clearance": "internal",
+    "note": "Fait contesté : la part du numérique et le montant total du budget. budget-acquisitions (interne) dit 96 000 euros et 18 pour cent ; decision-modificative-acquisitions (interne, décision modificative n° 1 votée le 24 mars 2026) dit 88 500 euros et 24 pour cent. Réponse CORRECTE si la décision modificative l'emporte : 24 pour cent, sur un budget ramené à 88 500 euros. Réponse FAUSSE si budget-acquisitions l'emporte : 18 pour cent, 96 000 euros. Les deux documents sont internes : posée par cet agent, la question est répondable, et l'écart observé ne vient donc pas du filtrage d'accès. La même question figure au niveau public dans questions.json, où elle doit toujours être refusée : les deux fichiers restent comparables sur ce point."
+  }
+]

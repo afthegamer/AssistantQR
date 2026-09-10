@@ -11,7 +11,7 @@
 # commettre dans le script d'accueil.
 #
 # IDEMPOTENCE. Chaque etape commence par constater. Ollama repond deja ? On ne
-# le relance pas. Les quatre modeles sont la ? On ne tire rien. Le binaire est
+# le relance pas. Les cinq modeles sont la ? On ne tire rien. Le binaire est
 # plus recent que les sources ? On ne reconstruit pas. L'index contient des
 # morceaux construits avec le modele qui tourne ? On ne reindexe pas — c'est le
 # point qui compte, parce que reindexer coute environ deux minutes et demie.
@@ -61,13 +61,29 @@ $script:CheminCli = Join-Path $script:RepoRoot "src\AssistantQR.Cli\bin\Debug\ne
 $script:ProjetCli = Join-Path $script:RepoRoot "src\AssistantQR.Cli"
 $script:DossierJournaux = Join-Path $env:TEMP "assistantqr-demarrer"
 
-# Les quatre modeles imposes par le sujet. Les tailles servent a prevenir AVANT
-# de lancer un telechargement de plusieurs gigaoctets.
+# Les cinq modeles dont la visite guidee a besoin — ni plus, ni moins. Les
+# tailles servent a prevenir AVANT de lancer un telechargement de plusieurs
+# gigaoctets. La commande 5 de la visite en compare trois d'un coup : elle exige
+# donc llama3.2:3b, qui n'etait pas requis tant que le test opposait seulement
+# granite4.2:3b a llama3.2:1b.
 $script:ModelesRequis = @(
-    [pscustomobject]@{ Nom = "granite4.2:3b";        Taille = "~2.2 Go"; Role = "generation, modele a raisonnement" }
-    [pscustomobject]@{ Nom = "llama3.2:1b";          Taille = "~1.3 Go"; Role = "generation, sans raisonnement" }
+    [pscustomobject]@{ Nom = "granite4.2:3b";        Taille = "~2.2 Go"; Role = "generation, 3B, reference de la visite" }
+    [pscustomobject]@{ Nom = "llama3.2:3b";          Taille = "~2.0 Go"; Role = "generation, 3B, l'appariement de granite au test 5" }
+    [pscustomobject]@{ Nom = "llama3.2:1b";          Taille = "~1.3 Go"; Role = "generation, 1B, le desequilibre du test 5" }
     [pscustomobject]@{ Nom = "qwen3-embedding:0.6b"; Taille = "~640 Mo"; Role = "embeddings, dimension 1024" }
     [pscustomobject]@{ Nom = "bge-m3";               Taille = "~1.2 Go"; Role = "embeddings, dimension 1024" }
+)
+
+# Modeles que ce script ne telecharge PAS, mais dont il signale la presence.
+# qwen3:4b tourne sur cette machine ; il ne tient simplement pas le prompt RAG
+# du depot, et un modele qu'on garde par erreur coute plus cher qu'un modele
+# absent. Ce script ne retire jamais rien : il constate et il chiffre.
+$script:ModelesEcartes = @(
+    [pscustomobject]@{
+        Nom    = "qwen3:4b"
+        Raison = "1029.8 s (17 min 10) pour UNE question du corpus, budget de 2000 jetons epuise " +
+                 "sans jamais fermer « </think> » : la reponse est perdue, la sortie est du raisonnement."
+    }
 )
 
 # Codes de retour, alignes sur l'esprit de ceux de la CLI : un code par famille
@@ -383,6 +399,12 @@ function Invoke-Etape3Modeles {
         }
     }
 
+    foreach ($ecarte in $script:ModelesEcartes) {
+        if ($installes -contains (Get-NomModeleNormalise $ecarte.Nom)) {
+            Write-Info "$($ecarte.Nom) — installe mais ECARTE de la visite, et conserve : $($ecarte.Raison)"
+        }
+    }
+
     if ($aTirer.Count -eq 0) {
         Write-Ok "les $($script:ModelesRequis.Count) modeles sont la — rien a telecharger."
         return
@@ -662,15 +684,33 @@ function Show-VisiteGuidee {
     # -------------------------------------------------------------------------
     # LES SIX COMMANDES ONT ETE JOUEES SUR CETTE MACHINE AVANT D'ETRE ECRITES
     # ICI. Les chiffres cites dans « Voir » sont des sorties relevees, pas des
-    # ordres de grandeur inventes. L'ordre raconte quelque chose : on part de ce
-    # qui rassure (un diagnostic vert), on finit par ce qui derange (41.7 % des
-    # reponses qui bougent sans qu'aucune erreur ne soit levee).
+    # ordres de grandeur inventes. L'ordre raconte quelque chose : deux fois le
+    # systeme rassure (un diagnostic vert, une reponse citee), deux fois il
+    # refuse pour proteger (un demandeur qui n'a pas l'habilitation, une
+    # etiquette d'embedding fausse), deux fois il derange (7 reponses qui
+    # basculent en refus quand le modele n'honore pas la consigne de citation,
+    # 41.7 % des reponses qui bougent sans qu'aucune erreur ne soit levee).
     #
     # « --prompt-version 1.2.0 » N'EST PAS DECORATIF. Le gabarit par defaut du
     # depot est le 1.0.0 ; avec granite4.2:3b, il fait recopier au modele
     # l'identifiant fictif de son propre exemple, et la reponse est rejetee sur
     # « ModelCitedUnknownDocument ». Mesure : 1.0.0 -> refus, 1.2.0 -> reponse
     # citee, meme question, meme index, meme minute.
+    #
+    # CE QUI A CHANGE, ET POURQUOI LE TEXTE DE LA COMMANDE 5 A ETE CORRIGE. La
+    # version precedente opposait granite4.2:3b a llama3.2:1b — 3B contre 1B —
+    # et concluait de 9 refus sur 12 que le produit s'effondrait. Le test a ete
+    # refait a trois modeles, llama3.2:3b intercale entre les deux : entre les
+    # deux 3B, 0/12 chaines de citations differentes. La mesure d'avant portait
+    # sur un ecart de taille de modele ; l'attribuer a la substitution de modele
+    # en general etait une lecture trop large. La commande 5 dit desormais ce
+    # que chacune des deux paires dit, separement.
+    #
+    # qwen3:4b N'APPARAIT PAS ICI, exprès. Il reste installe et l'etape 3 le
+    # signale : 1029.8 s (17 min 10) pour UNE question, 2000 jetons consommes
+    # sans jamais fermer « </think> », reponse perdue. Ce n'est pas une question
+    # de taille — 4B est plus gros que les trois modeles de la commande 5 : ce
+    # modele-la depense son budget en raisonnement et n'atteint pas la reponse.
     #
     # Le champ « Voir » accepte plusieurs lignes. Les lignes de continuation
     # portent leurs cinq espaces d'indentation a la main, pour tomber sous le
@@ -679,53 +719,78 @@ function Show-VisiteGuidee {
     $visite = @(
         [pscustomobject]@{
             Commande = "assistantqr doctor"
-            Voir     = "(~5 s) Profil « local », embeddings qwen3-embedding:0.6b/1024 sur :8088,`n" +
-                       "     generation granite4.2:3b sur :11434, quatre sondes OK : 23 documents,`n" +
-                       "     4 gabarits, 120 morceaux indexes, modele installe. Puis la phrase qui`n" +
-                       "     engage : si un service tombe, la commande s'arrete — aucune doublure."
+            Voir     = "(~5 s : 4.8 s mesurees) Profil « local », embeddings qwen3-embedding:0.6b/1024`n" +
+                       "     sur :8088, generation granite4.2:3b sur :11434, quatre sondes OK : 23`n" +
+                       "     documents, 4 gabarits, 120 morceaux indexes, modele installe (6 modeles`n" +
+                       "     au total sur cette machine). Puis la phrase qui engage : si un service`n" +
+                       "     tombe, la commande s'arrete — aucune doublure."
             Demontre = "Que rien n'est simule ici, et qu'une panne s'affichera au lieu d'etre absorbee."
         }
         [pscustomobject]@{
             Commande = "assistantqr ask ""Quels sont les horaires d'ouverture le samedi ?"" --prompt-version 1.2.0 --trace"
-            Voir     = "(10 s a 2 min, selon que granite4.2:3b est deja charge en memoire) « Les`n" +
-                       "     horaires d'ouverture le samedi sont de 10h00 a 18h00 [horaires-ouverture] »,`n" +
-                       "     puis la trace : 4 candidats bruts, 3 retenus, planning-agents#2 (0.727,`n" +
-                       "     internal) ecarte par l'acces, et l'empreinte de configuration complete."
-            Demontre = "Que chaque phrase rendue se remonte jusqu'a un morceau de document nomme."
+            Voir     = "(10 s a 2 min selon que granite4.2:3b est deja charge en memoire ; 92.4 s`n" +
+                       "     mesurees a froid) « Les horaires d'ouverture le samedi sont de 10h00 a`n" +
+                       "     18h00 [horaires-ouverture] », puis la trace : 4 candidats bruts, 3`n" +
+                       "     retenus, planning-agents#2 (0.727, internal) ecarte par l'acces. Le`n" +
+                       "     premier morceau, horaires-ouverture#1, sort a 0.740 : 0.0133 devant le`n" +
+                       "     meilleur morceau d'un AUTRE document — la 2e plus petite marge des 12`n" +
+                       "     questions du jeu, dont la mediane est 0.1197."
+            Demontre = "Que chaque phrase rendue se remonte a un morceau nomme, et que ce morceau ne l'emporte ici que de 0.0133 de cosinus."
         }
         [pscustomobject]@{
             Commande = "assistantqr ask ""Quelle est la remuneration d'un agent d'accueil ?"" --user agent-accueil --clearance internal --trace"
-            Voir     = "(~3 s, et zero appel a Ollama) Refus « NoEvidenceReadableByRequester » en`n" +
-                       "     619 ms. Les quatre meilleurs morceaux sont grille-remuneration #1, #2, #4`n" +
-                       "     et #5, scores 0.839 a 0.717, tous « confidential » : 4 candidats bruts,`n" +
-                       "     0 retenu, 0 extrait soumis au modele. Le montant existe et ne sort pas."
+            Voir     = "(~5 s, dont 3.20 s de recuperation, et zero appel a Ollama) Refus`n" +
+                       "     « NoEvidenceReadableByRequester ». Les quatre morceaux rendus sont`n" +
+                       "     grille-remuneration #1, #2, #4 et #5, scores 0.839 / 0.750 / 0.733 /`n" +
+                       "     0.717, tous « confidential » : 4 candidats bruts, 0 retenu, 0 extrait`n" +
+                       "     soumis au modele. Le montant est dans l'index et ne sort pas.`n" +
+                       "     Variante, pour voir la meme regle appliquee une couche plus tot`n" +
+                       "     (~2 min, deux generations) :`n" +
+                       "       assistantqr demo access-filter ""Quels sont les horaires d'ouverture le samedi ?"" --prompt-version 1.2.0`n" +
+                       "       -> post-filtrage : 3 extraits atteignent le modele, planning-agents#2`n" +
+                       "          ayant consomme une place du topK avant d'en etre retire ;`n" +
+                       "          pre-filtrage : 4, dont horaires-ouverture#4 (0.634)."
             Demontre = "Que le modele ne peut pas divulguer ce qu'il n'a jamais recu."
         }
         [pscustomobject]@{
-            Commande = "assistantqr demo access-filter ""Quels sont les horaires d'ouverture le samedi ?"" --prompt-version 1.2.0"
-            Voir     = "(~2 min : deux generations) La question de l'etape 2, rejouee des deux`n" +
-                       "     cotes du meme choix. Post-filtrage : planning-agents#2 (0.727, internal)`n" +
-                       "     occupe une place du topK avant d'en etre retire, 3 extraits atteignent`n" +
-                       "     le modele. Pre-filtrage : 4, dont horaires-ouverture#4 (0.634), inconnu`n" +
-                       "     de l'autre mode."
-            Demontre = "Que la couche ou vit une regle metier change ce que le modele recoit."
+            Commande = "assistantqr ask ""Quels sont les horaires d'ouverture le samedi ?"" --embedding bge-m3 --prompt-version 1.2.0"
+            Voir     = "(~3 s, code de retour 2, et pas un seul vecteur calcule) Le service tourne`n" +
+                       "     sous qwen3-embedding:0.6b — l'etat que ce script vient de poser — et tu`n" +
+                       "     declares bge-m3. Avant le premier /embed, l'adaptateur lit GET /health,`n" +
+                       "     confronte « nom declare : bge-m3 » a « nom reellement servi :`n" +
+                       "     qwen3-embedding:0.6b » et s'arrete. Les dimensions, elles, concordent`n" +
+                       "     (1024 contre 1024) : c'est le nom qui tranche. Le message donne les deux`n" +
+                       "     seules issues, aligner la declaration ou redemarrer le service."
+            Demontre = "Qu'une etiquette d'embedding fausse est arretee a la seconde ou elle est prononcee, au lieu d'etre recopiee dans les metadonnees de l'index et dans l'empreinte des instantanes."
         }
         [pscustomobject]@{
-            Commande = "assistantqr demo llm-swap --models granite4.2:3b,llama3.2:1b --prompt-version 1.2.0"
-            Voir     = "(~20 min : 1228 s mesurees, dont 1158 s de pure generation — lance-la et`n" +
-                       "     va faire autre chose) 12 questions, 12 recuperations « identique » sur`n" +
-                       "     12, et 9 reponses sur 12 differentes : granite cite ses sources,`n" +
-                       "     llama3.2:1b se fait refuser neuf fois sur « ModelProducedNoCitation ».`n" +
-                       "     L'index n'est reconstruit a aucun moment."
-            Demontre = "Que la recuperation ne bouge pas d'un iota — et que le produit s'effondre quand meme : 9 refus sur 12."
+            Commande = "assistantqr demo llm-swap --models granite4.2:3b,llama3.2:3b,llama3.2:1b --prompt-version 1.2.0"
+            Voir     = "(~31 min : 1854 s mesurees — granite4.2:3b 854.90 s soit 71.24 s par appel,`n" +
+                       "     llama3.2:3b 636.25 s soit 53.02 s, llama3.2:1b 358.46 s soit 29.87 s.`n" +
+                       "     Lance-la et va faire autre chose.) 12 questions, un seul index, jamais`n" +
+                       "     reconstruit : 12/12 recuperations identiques pour les trois modeles,`n" +
+                       "     memes morceaux, memes scores, meme ordre. Puis deux paires.`n" +
+                       "     granite4.2:3b contre llama3.2:3b — 3B contre 3B : 5/12 reponses`n" +
+                       "     differentes, 0/12 chaines de citations differentes, 7/12 chaines`n" +
+                       "     identiques NON VIDES, 0 passage reponse -> refus.`n" +
+                       "     granite4.2:3b contre llama3.2:1b — 3B contre 1B : 9/12 reponses`n" +
+                       "     differentes, 7/12 chaines de citations differentes, 0/12 chaine`n" +
+                       "     identique non vide, 7 passages reponse -> refus, tous motives par`n" +
+                       "     « ModelProducedNoCitation »."
+            Demontre = "Qu'entre deux modeles apparies les chaines de citations tiennent — 0/12 differentes — et que ce sont les 9 refus de citation du 1B, dont 7 sur des questions ou granite4.2:3b citait, qui font basculer les reponses en refus, la recuperation restant identique dans les deux comparaisons."
         }
         [pscustomobject]@{
             Commande = "assistantqr snapshot compare reel-qwen3 reel-bge-m3"
-            Voir     = "(~2 s : les deux instantanes sont deja au disque) Une seule difference de`n" +
-                       "     configuration, EmbeddingModel qwen3-embedding:0.6b -> bge-m3, et 5`n" +
-                       "     reponses sur 12 modifiees : 41.7 % de derive, sans une exception et sans`n" +
-                       "     un test qui change d'issue. Sur « horaires », les scores tombent de`n" +
-                       "     0.740/0.656/0.643 a 0.692/0.631/0.616/0.593.`n" +
+            Voir     = "(moins d'une seconde : 0.31 s mesurees, les deux instantanes sont au disque)`n" +
+                       "     Une seule difference de configuration, EmbeddingModel`n" +
+                       "     qwen3-embedding:0.6b -> bge-m3, et 5 reponses sur 12 modifiees : 41.7 %`n" +
+                       "     de derive, 5 « AnswerTextChanged » et 7 « Identical » — donc 0 citation`n" +
+                       "     changee, 0 exception, 0 test qui change d'issue. Sur « horaires », les`n" +
+                       "     scores passent de 0.740/0.656/0.643 a 0.692/0.631/0.616/0.593.`n" +
+                       "     Pourquoi si peu suffit : sur les 12 questions, la marge entre le`n" +
+                       "     meilleur morceau et le meilleur morceau d'un AUTRE document vaut 0.1197`n" +
+                       "     en mediane, et 5 questions sur 12 sont sous 0.10 — dont #1 a 0.0133 et`n" +
+                       "     #11, « velos », a 0.0017.`n" +
                        "     La refaire de bout en bout, ~25 min chronometrees, dans cet ordre :`n" +
                        "       1. assistantqr snapshot record reel-qwen3 --prompt-version 1.2.0`n" +
                        "            (96 s ; ecrase l'instantane livre)`n" +
@@ -734,10 +799,11 @@ function Show-VisiteGuidee {
                        "       3. .\scripts\demarrer.ps1 -Model bge-m3`n" +
                        "            (redemarre le service et reindexe : 82.9 s, dont 80.4 s d'embeddings)`n" +
                        "       4. assistantqr snapshot record reel-bge-m3 --embedding bge-m3`n" +
-                       "            --prompt-version 1.2.0   (944 s ; sans --embedding, l'instantane`n" +
-                       "            porterait l'etiquette qwen3 sur des vecteurs bge-m3)`n" +
+                       "            --prompt-version 1.2.0   (944 s ; sans --embedding, c'est le`n" +
+                       "            controle de la commande 4 qui t'arrete, au lieu de laisser`n" +
+                       "            partir l'etiquette qwen3 sur des vecteurs bge-m3)`n" +
                        "       5. cette commande-ci, de nouveau."
-            Demontre = "Qu'une ligne de configuration deplace 41.7 % des reponses sans lever d'erreur."
+            Demontre = "Qu'une ligne de configuration deplace 41.7 % des reponses sans changer une seule citation ni lever une erreur."
         }
     )
     # VISITE-GUIDEE-FIN

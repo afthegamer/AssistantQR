@@ -140,6 +140,44 @@ internal sealed class CommandLine
     }
 
     /// <summary>
+    /// Une liste « a,b,c » d'au moins <paramref name="minimum"/> valeurs, pour les
+    /// demonstrations qui comparent N reglages a une reference.
+    /// </summary>
+    /// <remarks>
+    /// POURQUOI UNE METHODE DE PLUS PLUTOT QU'UN ASSOUPLISSEMENT DE <see cref="Pair"/>.
+    /// Certaines demonstrations ont besoin d'exactement deux valeurs, et cette exigence
+    /// fait partie de leur contrat : comparer deux jeux d'embeddings, c'est comparer DEUX
+    /// index construits l'un apres l'autre. Assouplir <see cref="Pair"/> transformerait
+    /// leur erreur d'usage en surprise a l'execution. Les deux formes coexistent donc, et
+    /// chaque commande declare celle qui correspond a ce qu'elle sait faire.
+    ///
+    /// L'ORDRE EST SIGNIFIANT et les repetitions sont conservees : la premiere valeur sert
+    /// de reference aux demonstrations qui en ont une, et repeter deux fois le meme modele
+    /// est une facon legitime de mesurer la part de variabilite propre au modele.
+    /// </remarks>
+    /// <param name="name">Nom de l'option, sans les deux tirets.</param>
+    /// <param name="minimum">Nombre minimal de valeurs exigees par la commande appelante.</param>
+    /// <returns>Les valeurs dans l'ordre de la ligne de commande, ou <c>null</c> si l'option est absente.</returns>
+    public IReadOnlyList<string>? Values(string name, int minimum)
+    {
+        if (!Has(name))
+        {
+            return null;
+        }
+
+        var raw = RequiredValue(name);
+        var parts = raw.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+        return parts.Length >= minimum
+            ? parts
+            : throw new UsageException(
+                $"L'option « --{name} » attend au moins " +
+                $"{minimum.ToString(CultureInfo.InvariantCulture)} valeurs separees par une virgule, " +
+                $"par exemple « --{name} a,b ». Recu : « {raw} » " +
+                $"({parts.Length.ToString(CultureInfo.InvariantCulture)} valeur(s)).");
+    }
+
+    /// <summary>
     /// Refuse les options que la commande ne connait pas. Une faute de frappe silencieuse
     /// (« --clearence ») produirait une execution avec les valeurs par defaut et un
     /// resultat qu'on attribuerait au systeme plutot qu'a la commande tapee.

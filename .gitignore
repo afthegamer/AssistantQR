@@ -49,14 +49,19 @@ python/embeddings_service/data/
 # n'ont de sens que compares entre eux, dans une meme seance. Les versionner
 # ferait grossir l'historique sans rien apprendre a personne.
 #
-# Deux fichiers echappent a la regle parce qu'ils ne sont pas des mesures mais
+# Trois fichiers echappent a la regle parce qu'ils ne sont pas des mesures mais
 # des ENTREES du systeme, et que le depot doit fonctionner sans eux :
-#   - questions.json    : le jeu de questions d'evaluation ;
-#   - replay-llm.json   : les reponses rejouees par ReplayLanguageModel.
+#   - questions.json             : le jeu de questions d'evaluation ;
+#   - replay-llm.json            : les reponses rejouees par ReplayLanguageModel ;
+#   - questions-contestees.json  : le jeu qui interroge les documents en conflit
+#     de version, avec la valeur attendue de part et d'autre. Sans lui, les
+#     documents contestes du corpus partent sans les questions qui les exercent,
+#     et le resultat qu'ils servent a etablir n'est pas reproductible.
 # ---------------------------------------------------------------------------
 snapshots/*.json
 !snapshots/questions.json
 !snapshots/replay-llm.json
+!snapshots/questions-contestees.json
 
 # ---------------------------------------------------------------------------
 # Systeme

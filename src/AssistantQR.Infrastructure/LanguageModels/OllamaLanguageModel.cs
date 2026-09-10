@@ -103,7 +103,16 @@ public sealed class OllamaLanguageModel : ILanguageModel
             //     raisonnement, pas d'une reponse ;
             //   - le cout : 155 s au lieu de 1 s pour la meme question.
             // Le port ILanguageModel promet une reponse, pas un scratchpad. Le champ est
-            // accepte aussi par les modeles qui ne raisonnent pas : il est envoye
+            // CE QUE CE CHAMP FAIT DEPEND DU MODELE, et il a fallu le mesurer pour le
+            // savoir. Sur granite4.2:3b il supprime reellement le raisonnement : 10 jetons
+            // et 1,0 s au lieu de 155 s. Sur qwen3:4b il ne supprime rien — 245 jetons
+            // avec comme sans — il deplace seulement le brouillon du champ « thinking »
+            // vers « response ». D'ou StripReasoning ci-dessous, qui n'est pas une
+            // precaution theorique : c'est le seul filet sous les modeles de la seconde
+            // famille. Et quand le brouillon depasse le budget de jetons, la balise
+            // fermante n'arrive jamais, il n'y a plus rien a rattraper, et le refus du
+            // Domain est la seule issue correcte.
+            // Aucun modele teste ne rejette le champ : il est envoye
             // inconditionnellement, sans negociation ni repli.
             false,
             new GenerateOptions(
